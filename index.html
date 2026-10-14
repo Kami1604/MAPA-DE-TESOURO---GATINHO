@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mint & O Grafo do Petisco</title>
+    <style>
+        
+        :root {
+            --bg-color: #1ea3e3;
+            --win-bg-light: #f3efea;
+            --win-bg-dark: #000000;
+            --border-color: #000000;
+            --text-light: #ffffff;
+            --text-dark: #000000;
+            --accent-green: #00ff66;
+        }
+
+        * {
+            box-sizing: border-box;
+            font-family: 'Courier New', Courier, monospace;
+            font-weight: bold;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        h1 {
+            color: #ffffff;
+            text-shadow: 3px 3px 0px #000;
+            font-size: 2rem;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        /* Container do Jogo Estilo Desktop Antigo */
+        .desktop-container {
+            width: 100%;
+            max-width: 800px;
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+        }
+
+        @media(min-width: 768px) {
+            .desktop-container {
+                grid-template-columns: 1.2fr 0.8fr;
+            }
+        }
+
+        /* Estilo Base das Janelas Retro OS */
+        .retro-window {
+            border: 4px solid var(--border-color);
+            box-shadow: 8px 8px 0px rgba(0,0,0,1);
+            background-color: var(--win-bg-light);
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 10px;
+        }
+
+        .retro-window.dark-mode {
+            background-color: var(--win-bg-dark);
+            color: var(--text-light);
+        }
+
+        /* Barra de Título das Janelas */
+        .window-header {
+            background-color: var(--border-color);
+            color: var(--text-light);
+            padding: 6px 10px;
+            font-size: 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            letter-spacing: 1px;
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        .window-header .close-btn {
+            border: 2px solid var(--text-light);
+            padding: 0 4px;
+            font-size: 10px;
+            cursor: pointer;
+            background: transparent;
+            color: #fff;
+        }
+
+        .window-content {
+            padding: 15px;
+            flex-grow: 1;
+        }
+
+        /* Arte do Gatinho e Elementos */
+        .cat-avatar {
+            font-size: 45px;
+            text-align: center;
+            margin: 10px 0;
+            animation: bounce 1s infinite alternate;
+        }
+
+        @keyframes bounce {
+            from { transform: translateY(0); }
+            to { transform: translateY(-5px); }
+        }
+
+        /* Botões do Menu Retro */
+        .retro-btn {
+            background-color: var(--win-bg-light);
+            border: 3px solid var(--border-color);
+            padding: 10px 15px;
+            margin: 8px 0;
+            width: 100%;
+            text-align: left;
+            cursor: pointer;
+            font-size: 14px;
+            box-shadow: 4px 4px 0px #000;
+            display: block;
+            transition: all 0.1s;
+        }
+
+        .retro-btn:hover {
+            transform: translate(2px, 2px);
+            box-shadow: 2px 2px 0px #000;
+            background-color: #e0dacb;
+        }
+
+        .retro-window.dark-mode .retro-btn {
+            background-color: var(--win-bg-dark);
+            border-color: var(--text-light);
+            color: var(--text-light);
+            box-shadow: 4px 4px 0px var(--text-light);
+        }
+
+        .retro-window.dark-mode .retro-btn:hover {
+            background-color: #222;
+        }
+
+        /* Barra de Progresso/Status */
+        .status-bar {
+            border: 3px solid var(--border-color);
+            height: 24px;
+            width: 100%;
+            background: #fff;
+            position: relative;
+            margin-top: 15px;
+        }
+
+        .status-fill {
+            background: var(--border-color);
+            height: 100%;
+            width: 0%;
+            transition: width 0.4s ease;
+        }
+
+        .status-text {
+            position: absolute;
+            width: 100%;
+            text-align: center;
+            top: 2px;
+            font-size: 12px;
+            mix-blend-mode: difference;
+            color: #fff;
+        }
+
+        
+        .path-list {
+            margin-top: 15px;
+        }
+
+        .log-box {
+            font-size: 12px;
+            line-height: 1.4;
+            background: #571690;
+            padding: 8px;
+            border: 2px dashed #000;
+            height: 110px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>MAPA DO TESOURO</h1>
+
+    <div class="desktop-container">
+        
+        <!-- Janela Principal de Navegação (Esquerda) -->
+        <div class="retro-window" id="main-window">
+            <div class="window-header">
+                <span id="location-title">LOCAL: LOADING.PNG</span>
+                <button class="close-btn">X</button>
+            </div>
+            <div class="window-content">
+                <div class="cat-avatar" id="location-icon">🐈‍⬛</div>
+                <p id="location-desc" style="font-size: 15px; min-height: 60px;">
+                    Carregando a jornada urbana do pequeno Mint...
+                </p>
+                
+                <div class="path-list">
+                    <strong style="font-size: 12px; display:block; margin-bottom: 5px;">ESCOLHA O PRÓXIMO NÓ DO GRAFO:</strong>
+                    <div id="choices-container">
+                        <!-- Gerado Dinamicamente via JS -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Janela Lateral de Status (Direita) -->
+        <div>
+            <div class="retro-window dark-mode">
+                <div class="window-header">
+                    <span>MINT-STATUS</span>
+                    <button class="close-btn">X</button>
+                </div>
+                <div class="window-content">
+                    <div style="text-align: center; font-size: 13px; letter-spacing: 1px;">
+                        <span style="color: var(--accent-green)">● ONLINE</span> | JORNADA URBANA
+                    </div>
+                    
+                    <p style="font-size: 13px; margin: 15px 0 5px 0;">Proximidade do Baú de Petisco:</p>
+                    <div class="status-bar">
+                        <div class="status-fill" id="progress-bar"></div>
+                        <div class="status-text" id="progress-text">0%</div>
+                    </div>
+
+                    <p style="font-size: 13px; margin: 20px 0 5px 0;">Histórico de Movimentos:</p>
+                    <div class="log-box" id="log-box">
+                        [SISTEMA]: Ajude o gato preto a cruzar a cidade através dos nós do grafo sem se perder.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+    // Definição do Grafo do Mapa da Cidade
+    const cityGraph = {
+        "beco": {
+            title: "BECO-INICIAL",
+            icon: "🐈‍⬛",
+            desc: "Mint acordou em um beco azul e escutou um miado distante sobre um lendário baú de sachê e petiscos escondido na cidade. Para onde ir?",
+            progress: 10,
+            edges: ["avenida", "telhado"]
+        },
+        "avenida": {
+            title: "AVENIDA-MOVIMENTADA",
+            icon: "🚗",
+            desc: "Muitos carros passando rápidos! Mint precisa de cuidado. Há uma praça calma adiante ou um mercado com cheiro apetitoso por perto.",
+            progress: 30,
+            edges: ["beco", "praca", "mercado"]
+        },
+        "telhado": {
+            title: "TELHADOS-DA-CIDADE",
+            icon: "🐈",
+            desc: "Lá de cima o caminho é seguro. Mint encontra um gato amarelo sábio que aponta duas direções: a praça central ou o beco escuro de volta.",
+            progress: 40,
+            edges: ["beco", "praca"]
+        },
+        "praca": {
+            title: "PRACA-CENTRAL",
+            icon: "🌳",
+            desc: "Uma praça verde com pombos. O cheiro de petisco está ficando muito forte vindo em direção às docas, mas a avenida barulhenta também corta por aqui.",
+            progress: 60,
+            edges: ["avenida", "telhado", "docas"]
+        },
+        "mercado": {
+            title: "MERCADO-VELHO",
+            icon: "🐟",
+            desc: "Mint achou restos de peixe, recuperou energias! Mas o tesouro real não está aqui. O dono do mercado enxota ele em direção às docas.",
+            progress: 50,
+            edges: ["avenida", "docas"]
+        },
+        "docas": {
+            title: "DOCAS-DO-PORTO",
+            icon: "⚓",
+            desc: "O vento do mar traz o aroma supremo. O tesouro está muito perto, escondido atrás do Farol Antigo!",
+            progress: 85,
+            edges: ["praca", "mercado", "farol"]
+        },
+        "farol": {
+            title: "FAROL-FINAL",
+            icon: "🍱",
+            desc: "PARABÉNS! Mint usou as conexões do grafo com maestria e encontrou o grande Baú Dourado transbordando de petiscos de salmão!",
+            progress: 100,
+            edges: []
+        }
+    };
+
+    let currentNode = "beco";
+
+    function updateGame() {
+        const node = cityGraph[currentNode];
+        
+        
+        document.getElementById("location-title").innerText = `LOCAL: ${node.title}`;
+        document.getElementById("location-icon").innerText = node.icon;
+        document.getElementById("location-desc").innerText = node.desc;
+        
+        
+        document.getElementById("progress-bar").style.width = `${node.progress}%`;
+        document.getElementById("progress-text").innerText = `${node.progress}% DE FOCO`;
+
+        const choicesContainer = document.getElementById("choices-container");
+        choicesContainer.innerHTML = "";
+
+        if (node.edges.length === 0) {
+            const restartBtn = document.createElement("button");
+            restartBtn.className = "retro-btn";
+            restartBtn.innerHTML = "PLAY AGAIN (REINICIAR JOGO)";
+            restartBtn.onclick = () => {
+                currentNode = "beco";
+                document.getElementById("log-box").innerHTML = "[SISTEMA]: Nova aventura iniciada no Beco.";
+                updateGame();
+            };
+            choicesContainer.appendChild(restartBtn);
+        } else {
+            node.edges.forEach(edgeId => {
+                const destination = cityGraph[edgeId];
+                const btn = document.createElement("button");
+                btn.className = "retro-btn";
+                
+                btn.innerHTML = `→ IR PARA: ${destination.title}`;
+                btn.onclick = () => moveToNode(edgeId);
+                choicesContainer.appendChild(btn);
+            });
+        }
+    }
+
+    function moveToNode(nodeId) {
+        currentNode = nodeId;
+        const node = cityGraph[nodeId];
+        
+        const logBox = document.getElementById("log-box");
+        logBox.innerHTML += `<br>► Entrou em: ${node.title}`;
+        logBox.scrollTop = logBox.scrollHeight; 
+        
+        updateGame();
+    }
+
+    updateGame();
+</script>
